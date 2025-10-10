@@ -57,6 +57,13 @@ paths:
                     description: One or all params are missing
             summary: Creates a game
             description: Creates a new game
+        delete:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/delete-game'
+                required: true
     '/games/:id':
         get:
             responses:
