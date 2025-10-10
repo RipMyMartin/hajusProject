@@ -7,6 +7,11 @@ const swaggerDocument = require('./swagger.json');
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.get('/games', (req, res) => {
+    res.send(["Witcher 3", "Cyberpunk 2077"]);
+});
+
+
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
