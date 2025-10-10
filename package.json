@@ -18,6 +18,7 @@
   "homepage": "https://github.com/RipMyMartin/hajusProject#readme",
   "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "swagger-ui-express": "^5.0.1"
   }
 }
