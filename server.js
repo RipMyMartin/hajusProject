@@ -7,49 +7,70 @@ const YAML = require('yamljs');
 
 const swaggerDocument = YAML.load('./docs/swagger.yaml');
 
+const mongoose = require('mongoose');
+const Game = require('./models/game');
+
+require('dotenv').config();
+const uri = process.env.MONGODB_URI;
+
 app.use(express.json());
 
-const games = [
-    { id: 1, name: "Witcher 3", price: 19.99 },
-    { id: 2, name: "Cyberpunk 2077", price: 29.99 },
-    { id: 3, name: "Minecraft", price: 24.99 },
-    { id: 4, name: "Counter-Strike: Global Offensive", price: 14.99 },
-    { id: 5, name: "Roblox", price: 9.99 },
-    { id: 6, name: "Grand Theft Auto V", price: 29.99 },
-    { id: 7, name: "Valorant", price: 19.99 },
-    { id: 8, name: "Forza Horizon 5", price: 59.99 },
-]
+mongoose.connect(uri)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log("Error connecting to MongoDB:", err));
 
-app.get('/games', (req, res) => {
-    if (!req.query.name || req.query.price) {
-        return res.status(400).send({ error: "One or more query parameters are missing" });
+app.get('/games', async (req, res) => {
+    try {
+        const games = await Game.find();
+        res.json(games);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-    let game = {
-        id: games.length + 1,
-        name: req.query.name,
-        price: req.query.price
-    };
-    games.push(game);
-    res.status(201).location(`${getBaseUrl(req)}/games/${game.length}`)
-        .send(game);
 });
 
-app.post('/games', (req, res) => {
-    games.push({
-        id: games.length + 1,
-        name: req.query.name,
-        price: req.query.price
-    });
-    res.end();
+app.post('/games', async (req, res) => {
+    try {
+        const lastGame = await Game.findOne().sort({ id: -1 });
+        const newId = lastGame ? lastGame.id + 1 : 1;
+
+        const game = new Game({
+            id: newId,
+            name: req.body.name,
+            price: req.body.price
+        });
+
+        const newGame = await game.save();
+        res.status(201).json(newGame);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
-app.delete('/games/:id', (req, res) => {
-    if (typeof games[req.params.id - 1] === 'undefined') {
-        res.status(404).send({ error: "Game not found" });
-        return;
+app.put('/games/:id', async (req, res) => {
+    try {
+        const game = await Game.findOne({ id: req.params.id });
+        if (!game) return res.status(404).json({ message: 'Game not found' });
+
+        game.name = req.body.name || game.name;
+        game.price = req.body.price || game.price;
+
+        const updatedGame = await game.save();
+        res.json(updatedGame);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
-    games.splice(req.params.id - 1, 1);
-    res.status(204).send({ error: "No content" });
+});
+
+app.delete('/games/:id', async (req, res) => {
+    try {
+        const game = await Game.findOne({ id: req.params.id });
+        if (!game) return res.status(404).json({ message: 'Game not found' });
+
+        await game.deleteOne();
+        res.json({ message: 'Game deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 function getBaseUrl(req) {
@@ -59,12 +80,14 @@ function getBaseUrl(req) {
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.get('/games/:id', (req, res) => {
-    if (typeof games[req.params.id - 1] === 'undefined') {
-        res.status(404).send({ error: "Game not found" });
-        return;
+app.get('/games/:id', async (req, res) => {
+    try {
+        const game = await Game.findOne({ id: req.params.id });
+        if (!game) return res.status(404).json({ message: 'Game not found' });
+        res.json(game);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-    res.send(games[req.params.id - 1]);
 });
 
 
