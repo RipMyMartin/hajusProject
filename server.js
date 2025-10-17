@@ -14,6 +14,7 @@ require('dotenv').config();
 const uri = process.env.MONGODB_URI;
 
 app.use(express.json());
+app.use(express.static('public'));
 
 mongoose.connect(uri)
     .then(() => console.log('MongoDB connected'))
@@ -72,11 +73,6 @@ app.delete('/games/:id', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-
-function getBaseUrl(req) {
-    return req.connection && req.connection.encrypted ?
-        'https://' : 'http://' + req.headers.host;
-}
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
