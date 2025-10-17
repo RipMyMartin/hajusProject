@@ -69,7 +69,6 @@ const vue = Vue.createApp({
         },
 
         applySorting: function () {
-            // Создаём новый отсортированный массив
             this.games = [...this.games].sort((a, b) => {
                 let valueA = a[this.sortField];
                 let valueB = b[this.sortField];

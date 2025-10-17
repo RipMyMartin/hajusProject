@@ -74,8 +74,6 @@ app.delete('/games/:id', async (req, res) => {
     }
 });
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
 app.get('/games/:id', async (req, res) => {
     try {
         const game = await Game.findOne({ id: req.params.id });
@@ -86,6 +84,7 @@ app.get('/games/:id', async (req, res) => {
     }
 });
 
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
