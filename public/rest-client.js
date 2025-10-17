@@ -1,10 +1,17 @@
 const vue = Vue.createApp({
     data() {
-        return { selectedGame: { name: null }, games: [] };
-
+        return {
+            selectedGame: { name: null },
+            games: [],
+            allGames: [],
+            searchQuery: '',
+            sortField: '',
+            sortOrder: 'asc'
+        };
     },
     async created() {
-        this.games = await (await fetch('/games')).json();
+        this.allGames = await (await fetch('/games')).json();
+        this.games = this.allGames;
     },
     methods: {
         getGame: async function (id) {
@@ -34,6 +41,55 @@ const vue = Vue.createApp({
             addFormModal.show();
         },
 
+        searchGames: function () {
+
+            if (this.searchQuery.trim() === '') {
+                this.games = this.allGames;
+            } else {
+                this.games = this.allGames.filter(game =>
+                    game.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            }
+
+            if (this.sortField) {
+                this.applySorting();
+            }
+        },
+
+        sortBy: function (field) {
+
+            if (this.sortField === field) {
+                this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+
+                this.sortField = field;
+                this.sortOrder = 'asc';
+            }
+            this.applySorting();
+        },
+
+        applySorting: function () {
+            // Создаём новый отсортированный массив
+            this.games = [...this.games].sort((a, b) => {
+                let valueA = a[this.sortField];
+                let valueB = b[this.sortField];
+
+
+                if (typeof valueA === 'string') {
+                    valueA = valueA.toLowerCase();
+                    valueB = valueB.toLowerCase();
+                }
+
+                if (valueA < valueB) {
+                    return this.sortOrder === 'asc' ? -1 : 1;
+                }
+                if (valueA > valueB) {
+                    return this.sortOrder === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        },
+
         updateGame: async function () {
             try {
                 const response = await fetch(`/games/${this.selectedGame.id}`, {
@@ -48,7 +104,13 @@ const vue = Vue.createApp({
                 });
 
                 if (response.ok) {
-                    this.games = await (await fetch('/games')).json();
+                    this.allGames = await (await fetch('/games')).json();
+                    this.games = this.allGames;
+                    this.searchQuery = '';
+
+                    if (this.sortField) {
+                        this.applySorting();
+                    }
                     let editFormModal = bootstrap.Modal.getInstance(document.getElementById('editFormModal'));
                     if (editFormModal) editFormModal.hide();
                 }
@@ -63,7 +125,13 @@ const vue = Vue.createApp({
                 });
 
                 if (response.ok) {
-                    this.games = await (await fetch('/games')).json();
+                    this.allGames = await (await fetch('/games')).json();
+                    this.games = this.allGames;
+                    this.searchQuery = '';
+
+                    if (this.sortField) {
+                        this.applySorting();
+                    }
                     let deleteFormModal = bootstrap.Modal.getInstance(document.getElementById('deleteFormModal'));
                     if (deleteFormModal) deleteFormModal.hide();
                 }
@@ -84,7 +152,13 @@ const vue = Vue.createApp({
                     })
                 });
                 if (response.ok) {
-                    this.games = await (await fetch('/games')).json();
+                    this.allGames = await (await fetch('/games')).json();
+                    this.games = this.allGames;
+                    this.searchQuery = '';
+
+                    if (this.sortField) {
+                        this.applySorting();
+                    }
                     let addFormModal = bootstrap.Modal.getInstance(document.getElementById('addFormModal'));
                     if (addFormModal) addFormModal.hide();
                 }
